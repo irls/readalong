@@ -1,0 +1,11 @@
+{
+  "name": "readalong",
+  "version": "1.0.0",
+  "description": "Adaptation of Weston Ruter's HTML5-Audio-Read-Along",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chad Jones <chadananda@gmail.com>",
+  "license": "ISC"
+}
