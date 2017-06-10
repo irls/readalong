@@ -7,5 +7,22 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Chad Jones <chadananda@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chadananda/readalong.git"
+  },
+  "keywords": [
+    "audio",
+    "alignment",
+    "audio",
+    "align",
+    "immersive",
+    "reading",
+    "ocean"
+  ],
+  "bugs": {
+    "url": "https://github.com/chadananda/readalong/issues"
+  },
+  "homepage": "https://github.com/chadananda/readalong#readme"
 }
