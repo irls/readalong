@@ -1,5 +1,7 @@
 # ReadAlong
 
+## Note: Project in progress. I expect to have this module actually working later this weekend
+
 HTML Read Along UI tool for immersive audio accompaniment
 
 This library is an adaptation of the work of Weston Ruter https://github.com/westonruter/html5-audio-read-along
