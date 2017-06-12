@@ -1,0 +1,34 @@
+<html>
+ <head><title> ReadAlong Test </title> 
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+ </head>
+ <style>
+    #content {padding: 2em; border: 2px solid silver; border-radius: 10px;}
+    .par {font-size: 14pt; line-height: 1.2em; padding-bottom: 1em;}
+    .title {font-size: 18pt; font-weight: bold; margin-bottom: 1em;}
+ </style>
+<body><div id="app" class="container"><div class="row"><div class="col-sm-12">
+  
+   <h2> {{title}} </h2>
+    
+   <p v-if='html5audio'> Audio Available </p>
+   <p v-else>HTML5 audio playback are not available </p>  
+   
+   <textarea v-if="false" v-html="bookcontent" style="width:100%; height: 500px"></textarea>
+   
+   <div id="content" class="container">
+    <div v-for="block in blocks" :class="block.type" :id="block.id" v-html="blockContent(block)" :data-hasaudio="blockHasAudio(block)"></div>
+   </ul>
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+</div></div></div><script src="bundle.js"></script></body></html>
+ 

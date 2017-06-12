@@ -1,10 +1,13 @@
 {
   "name": "readalong",
   "version": "1.0.0",
-  "description": "Adaptation of Weston Ruter's HTML5-Audio-Read-Along",
-  "main": "index.js",
+  "description": "Audio/text player UI, based on Weston Ruter's HTML5-Audio-Read-Along",
+  "main": "readalong.js",
+  "directories": {
+    "test": "test"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "budo test/vueapp.js:bundle.js -d test -o -l --cors --wg 'test/index.html'"
   },
   "author": "Chad Jones <chadananda@gmail.com>",
   "license": "ISC",
@@ -26,7 +29,14 @@
   },
   "homepage": "https://github.com/chadananda/readalong#readme",
   "dependencies": {
-    "chai": "^4.0.2",
-    "mocha": "^3.4.2"
+    "js-binary": "^1.1.0"
+  },
+  "devDependencies": {
+    "ascii85": "^1.0.2",
+    "budo": "^10.0.3",
+    "compromise": "^10.5.2",
+    "jquery": "^3.2.1",
+    "remove-punctuation": "0.0.4",
+    "vue": "^2.3.4"
   }
 }
