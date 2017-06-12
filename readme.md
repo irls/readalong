@@ -79,14 +79,25 @@ I'm trying to make this as terse as possible since the my target is ebooks on mo
 
 ```html
 <!-- #1 Readalong html format: -->
-<p id='b31' data-audio='luke2.mp3'><span data-dur="0.154" data-begin="0.775">In</span> <span data-dur="0.28" data-begin="0.929">those</span> <span data-dur="0.29" data-begin="1.218">days</span> <span data-dur="0.131" data-begin="1.508">a</span> <span data-dur="0.525" data-begin="1.639">decree</span> <span data-dur="0.191" data-begin="2.165">went</span> <span data-dur="0.225" data-begin="2.355">out</span> <span data-dur="0.245" data-begin="2.583">from</span> <span data-dur="0.438" data-begin="2.828">Caesar</span></p>
+<p id='b31'><span data-dur="0.154" data-begin="0.775">In</span> 
+  <span data-dur="0.28" data-begin="0.929">those</span> 
+  <span data-dur="0.29" data-begin="1.218">days</span> 
+  <span data-dur="0.131" data-begin="1.508">a</span> 
+  <span data-dur="0.525" data-begin="1.639">decree</span> 
+  <span data-dur="0.191" data-begin="2.165">went</span> 
+  <span data-dur="0.225" data-begin="2.355">out</span> 
+  <span data-dur="0.245" data-begin="2.583">from</span> 
+  <span data-dur="0.438" data-begin="2.828">Caesar</span></p>
 
 <!-- #2 My terse format --> 
-<p id='b31'><w>In</w> <w>those</w> <w>days</w> <w>a</w> <w>decree</w> <w>went</w> <w>out</w> <w>from</w> <w>Caesar</w></p>
+<p id='b31'><w>In</w> <w>those</w> <w>days</w> <w>a</w> <w>decree</w> 
+<w>went</w> <w>out</w> <w>from</w> <w>Caesar</w></p>
 ```
 ```javascript
 // Audiomap lookup object
-map: {b31: ["775,154","929,280","1218,290","1508,131","1639,525","2165,191,ex,2355,180","2355,225","2583,245","2828,438"]}
+map_lookup: {
+  b31: [{begin:775, dur:154}, {begin:929, dur:280}, {begin:1218, dur:290}, {begin:1508, dur:131}, {begin:1639, dur:525}, {begin:2165, dur:191}, {begin:2355, dur:225}, {begin:2583, dur:245}, {begin:2828, dur:438}]
+}
 ```
 
 During initialization, an array of words is collected (as it is now). 
