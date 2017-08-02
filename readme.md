@@ -80,7 +80,8 @@ I'm keeping the start and duration times in an external mapping lookup object an
 
 ```html
 <!-- #1 Readalong html format, does not include audio src: -->
-<p id='b31'><span data-dur="0.154" data-begin="0.775">In</span> 
+<p id='b31'>
+  <span data-dur="0.154" data-begin="0.775">In</span> 
   <span data-dur="0.28" data-begin="0.929">those</span> 
   <span data-dur="0.29" data-begin="1.218">days</span> 
   <span data-dur="0.131" data-begin="1.508">a</span> 
@@ -88,19 +89,20 @@ I'm keeping the start and duration times in an external mapping lookup object an
   <span data-dur="0.191" data-begin="2.165">went</span> 
   <span data-dur="0.225" data-begin="2.355">out</span> 
   <span data-dur="0.245" data-begin="2.583">from</span> 
-  <span data-dur="0.438" data-begin="2.828">Caesar</span></p>
+  <span data-dur="0.438" data-begin="2.828">Caesar</span>
+</p>
 
-<!-- #2 My slightly more terse format, uses ms instead of seconds -->  
+<!-- #2 My slightly more terse format, uses integer ms instead of seconds -->  
 <p id="b31" data-audiosrc="b31.mp3">
-  <w data-map="1540,775">In</w> 
-  <w data-map="2800,929">those</w> 
-  <w data-map="2900,1218">days</w> 
-  <w data-map="1310,1508">a</w> 
-  <w data-map="5250,1639">decree</w> 
-  <w data-map="1910,2165">went</w> 
-  <w data-map="2250,2355">out</w> 
-  <w data-map="2450,2583">from</w> 
-  <w data-map="4380,2828">Caesar</w>
+  <w data-map="775,154">In</w> 
+  <w data-map="929,280">those</w> 
+  <w data-map="1218,290">days</w> 
+  <w data-map="1508,131">a</w> 
+  <w data-map="1639,525">decree</w> 
+  <w data-map="2165,191">went</w> 
+  <w data-map="2355,225">out</w> 
+  <w data-map="2583,245">from</w> 
+  <w data-map="2828,438">Caesar</w>
 </p>
 
 ```
