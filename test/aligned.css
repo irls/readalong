@@ -1,0 +1,24 @@
+  p w {position: relative;}
+  /* A tricky way to create a lightweight highlight effect */
+  w[data-map] {
+    background: linear-gradient(white,white 50%, rgba(0,255,0,.2) 55%, white 70%,white);  
+    cursor: pointer
+  }
+  p[data-audiosrc] w:not([data-map]) {
+    background: linear-gradient(white,white 30%, rgba(255,0,0,.3) 55%, white 80%,white);  
+  }
+  /* hover effect to show which word is affected */
+  w.audio-highlight {border-bottom: 5px solid rgb(226,226,226); border-radius: 3px; }
+  w.audio-trail {border-bottom: 5px solid rgb(240,240,240); border-radius: 3px; }
+  /* gap markers -- although CSS content messes up wrapping and is tricky to detect clicks */
+  w[data-gap] {margin-right: 52px} /* Make room for marker */
+  w[data-gapbefore] {margin-left: 50px} /* Make room marker */  
+  w[data-gap]:after, w[data-gapbefore]:before {
+    cursor: pointer; padding: 5px; margin: 5px; position: absolute; width: auto; 
+    border-radius: .5em; border: 1px solid gray; background: silver;  
+    font: 10pt 'FontAwesome';
+  }
+  w[data-gap]:after { content: '\f060\00A0\f1c7'; margin-left: 4px;} /*  fa-file-sound-o */
+  w[data-gapbefore]:before { content: '\f1c7\00A0\f061'; left: -50px; }
+  w.audio-highlight {background: linear-gradient(white 20%, rgba(255,255,0,.8) 55%, white 80%);}
+  w.audio-trail {background: linear-gradient(white 30%, rgba(255,255,0,.4) 55%, white 70%);} 
