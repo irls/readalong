@@ -74,12 +74,13 @@ ra.playBlock('a365')
 
 The original ReadAlong implementation used a very verbose and DOM-based approach. Each word was wrapped in a span with data attributes specifying the start and length of that word.
 
-I'm trying to make this as terse as possible since the my target is ebooks on mobile. So I'm wrapping each word in a custom "w" tag during initialization and keeping timing information in an indexed array keyed by block id.
+I'm trying to make this as terse as possible since the my target is ebooks on mobile. So I'm wrapping each word in a custom "w" tag during initialization and keeping timing information in an indexed array keyed by block id. The "w" tag is not standard HTML which means it will not get in the way of any <span> tags you already use. But you can change this in the config object if you choose.
 
-I'm keeping the start and duration times in an external mapping lookup object and I'm changing floating seconds to milliseconds to get rid of the decimal.
+Also, I've switched the default storage to a single data-map attribute formatted as "begin,dur" and with integer ms instead of floating seconds. More natural to programming, I feel.
+
 
 ```html
-<!-- #1 Readalong html format, does not include audio src: -->
+<!-- #1 Original Readalong html format, (does not include audio src): -->
 <p id='b31'>
   <span data-dur="0.154" data-begin="0.775">In</span> 
   <span data-dur="0.28" data-begin="0.929">those</span> 
@@ -92,7 +93,7 @@ I'm keeping the start and duration times in an external mapping lookup object an
   <span data-dur="0.438" data-begin="2.828">Caesar</span>
 </p>
 
-<!-- #2 My slightly more terse format, uses integer ms instead of seconds -->  
+<!-- #2 My slightly more terse format with block, uses integer ms instead of seconds -->  
 <p id="b31" data-audiosrc="b31.mp3">
   <w data-map="775,154">In</w> 
   <w data-map="929,280">those</w> 
