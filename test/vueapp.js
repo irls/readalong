@@ -70,31 +70,29 @@ function decodeIntArray(enc) {
   return schema.decode(new Buffer(enc, 'base64'))
 }
 
-function wordWrap(html) {
+function wordWrap(html, map, tag) {
+  if (!tag) tag = 'w'
+  if (!map) map = false
   words = parse(html)
-  words.map((word, i) => { words[i].word='<w>'+word.word+'</w>' })
+  words.map((word, i) => {
+    if (!map[i]) words[i].replace = `<${tag}>${word.word}</${tag}>`
+      else words[i].replace = `<${tag} data-begin="${map[i].begin}" data-dur="${map[i].dur}">${word.word}</${tag}>`
+  })
   return unparse(words) 
 }
 // return array of objects describing each word
 function parse(str) {
-  var list = nlp(str).out('terms');
-  var pos_options = {Noun:'noun', Verb:'verb', Adjective:'adj', Adverb:'adv'}; 
-  // pull out parts we actually want
-  var words = [];
-  list.forEach((word, index) => { 
-    let newword = {}
-    newword.discard = word.tags.filter((tag)=>!pos_options[tag] )
-    newword.pos = word.tags
-     .filter((tag)=>pos_options[tag]).map((tag)=>pos_options[tag])
-    newword.pos = newword.pos[0] || '' 
-    newword.word = word.text 
-    list[index] = newword
-  }); 
+  var list = nlp(str).out('terms'); 
+  // pull out word and normalized word
+  list.forEach((word, i) => { 
+    list[i] = { word: word.text, 
+                normal: removePunctuation(word.text).trim().toLowerCase() }
+  });
   return list;
 }
 function unparse(arr) {
   let result = []
-  arr.map((word) => result.push(word.word))
+  arr.map((word) => result.push(word.replace || word.word))
   return result.join(' ')
 }
  
@@ -114,16 +112,12 @@ var app = new Vue({
     blockContent: function(block) {
       if (block.map) {
         let map = decodeMap(block.map)
-        this.audiomap[block.id] = map
-        let words = parse(block.content)
-        words.map((word, i) => { 
-          words[i].word= `<w data-begin="${map.map[i].begin}" data-dur="${map.map[i].dur}">${word.word}</w>` 
-        })
-        return unparse(words) 
+        this.audiomap[block.id] = map 
+        return wordWrap(block.content)
+        //return wordWrap(block.content, map.map, 'span') 
       } else {
         return block.content
       }
-       
     },
     parseBlock: function (blockhtml) {      
       // return wordWrap(blockhtml)  
