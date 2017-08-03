@@ -39,7 +39,7 @@ setTimeout(() => { ra.changePlayRate(1.2) }, 15000)
 
 This is a UI object, so the tests were just used for development.  
 
-
+example: https://dl.dropboxusercontent.com/u/382588/JS/Projects/NPM%20Module%20Projects/readalong/test/gospel-wealth-single.html
 
 
 
