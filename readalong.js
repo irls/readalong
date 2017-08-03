@@ -377,3 +377,6 @@ class ReadAlong {
 
   }
 }
+
+
+module.exports = ReadAlong
