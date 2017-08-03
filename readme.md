@@ -30,7 +30,7 @@ ra.playBlock('a365')
 // just for fun, tweak the speed every 5 seconds
 setTimeout(() => { ra.changePlayRate(1) }, 5000) 
 setTimeout(() => { ra.changePlayRate(.8) }, 10000) 
-setTimeout(() => { ra.changePlayRate(1.2) }, 15000) 
+setTimeout(() => { ra.changePlayRate(1.2) }, 15000)  
 
 
 ```

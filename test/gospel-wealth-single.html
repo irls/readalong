@@ -69,8 +69,8 @@ function onAudioResume(word) {
 function onAudioComplete(blockid){
   console.log('on_complete event:', `block: #${blockid}`)
 }
-function onAudioNewline(from, to) {
-  console.log('on_newline event', `${from}, ${to}`)
+function onAudioNewline(from, to, complete) {
+  console.log('on_newline event', `${from}, ${to}`, ', Percent complete: ', `${complete}%`)
 }
   
 // function blockClickEvent(e) {   

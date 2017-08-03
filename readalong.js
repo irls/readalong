@@ -59,6 +59,9 @@ class ReadAlong {
     for (name in config) this.config[name] = config[name]
     // setup audio player 
     if (!this.audio_element) this.audio_element = document.createElement('audio')
+    this.playbackRate = Math.max(this.playbackRate, 0.5)
+    this.playbackRate = Math.min(this.playbackRate, 2.0) 
+    this.audio_element.playbackRate = this.playbackRate
     // internal stuff
     this._current_select_timeout = null 
     this._next_select_timeout = null
@@ -66,10 +69,11 @@ class ReadAlong {
     this.word = null
     this.last_word = null 
     this.block_duration = 0 
-    this.block_duration_adjusted = 0
+    this.block_duration_adjusted = 0 
   }
 
-  playBlock  (blockid) { 
+  playBlock  (blockid, speed=null) { 
+    if (speed) this.changePlayRate(speed)
     // todo, if already playing, stop, clear and reset   
     this.blockid = blockid  
     this.block_element = document.getElementById(blockid) 
@@ -123,6 +127,9 @@ class ReadAlong {
   }
 
   changePlayRate (playbackRate=1) {
+    if (playbackRate === this.playbackRate) return
+    playbackRate = Math.max(playbackRate, 0.5)
+    playbackRate = Math.min(playbackRate, 2.0) 
     this.playbackRate = playbackRate
     this.audio_element.playbackRate = playbackRate
     //this.block_duration_adjusted = Math.round(this.block_duration* 1.0/this.playbackRate)
@@ -237,7 +244,9 @@ class ReadAlong {
     if (!word || !word.element) return // word = this.last_word
     let isNewline = (word.index>0) && (word.element.offsetTop> this.prevOffsetTop)
     word.element.classList.add(reading_class) 
-    if (isNewline && this.events.on_newline) this.events.on_newline(this.prevOffsetTop, word.element.offsetTop) 
+    let percentComplete = Math.round((word.index+1)/this.words.length * 100)
+    let onNewLine = this.events.on_newline
+    if (isNewline && onNewLine) onNewLine(this.prevOffsetTop, word.element.offsetTop, percentComplete) 
     if (isNewline && this.forceLineScroll) this.lineScroll(word.element.offsetTop - this.prevOffsetTop)
     this.prevOffsetTop = word.element.offsetTop;
     // clear previous word highlight
@@ -253,7 +262,9 @@ class ReadAlong {
   }
 
   lineScroll(pixles) {
-    console.log('LineScroll', pixles)
+    // console.log('LineScroll', pixles)
+    // TODO: implement browser scroll by # pixels
+    window.scrollBy(0, pixles)
   }
 
   addEventListeners  () {
@@ -271,11 +282,16 @@ class ReadAlong {
      */
     that.audio_element.addEventListener('pause', function (e) { 
       that.selectCurrentWord() // We always want a word to be selected  
-      let word = that.getCurrentWord()
-      let onComplete = that.events.on_complete
+      let word = that.getCurrentWord() 
       let onPause = that.events.on_pause
-      if (!word && onComplete) onComplete(that.blockid)
-      else if (word && onPause) onPause(word) 
+      if ((word.index<that.words.length-1) && onPause) onPause(word) 
+    }, false);
+
+    /**
+     * Event just for completion of block
+     */
+    that.audio_element.addEventListener('ended', function (e) {  
+      if (that.events.on_complete) that.events.on_complete(that.blockid) 
     }, false);
 
     /**
