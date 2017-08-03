@@ -6,6 +6,20 @@ This object is an adaptation of the work of Weston Ruter https://github.com/west
 
 My purpose was to abstract the functionality into a flexible, lightwight object to allow plugging functionality into modular framework-based applications. 
 
+Some changes include: 
+
+ *   Improved speed of getCurrentWord and class highlighting
+ *   Simplified timers to use just one, improving reliability at higher speeds
+ *   Added a bunch of consumer events (on_start, on_complete, on_pause, on_resume, on_newline)
+ *   Made tags and classes somewhat configurable, with terse deaults
+ *   Removed the tab index stuff (I probably shouldn't have)
+ *   Changed seconds to ms
+ *   Changed data-attributes to use a single 'data-map' attribute like data-map="7464,844"
+ *   Wrapped code in instantiatable object with configuration in constructor
+ *   If no audio src, src is extracted from block's data-audiosrc
+ *   Added top-level play controls such as playBlock, pause, resume, playRange, playWord
+ *   Audio element is created automatically and need not be provided in HTML
+
 ## Install
 
 ```npm install readalong --save```
@@ -39,7 +53,7 @@ setTimeout(() => { ra.changePlayRate(1.2) }, 15000)
 
 This is a UI object, so the tests were just used for development.  
 
-example: https://dl.dropboxusercontent.com/u/382588/JS/Projects/NPM%20Module%20Projects/readalong/test/gospel-wealth-single.html
+[Live example](https://dl.dropboxusercontent.com/u/382588/JS/Projects/NPM%20Module%20Projects/readalong/test/gospel-wealth-single.html)
 
 
 

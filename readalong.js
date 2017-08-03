@@ -3,16 +3,17 @@
  * @author Weston Ruter, X-Team
  * @modified Chad Jones - injectable object
  *  Some changes include: 
- *   improved speed of getCurrentWord and class highlighting
- *   added a bunch of consumer events (start, complete, pause, resume, newline)
- *   made the tags and classes all configurable
- *   removed the tab index stuff (I probably shouldn't have)
- *   changed all seconds to ms
- *   changed data-attributes to use a single 'data-map' attribute like data-map="7464,8448"
- *   wrapped everything in an instantiatable object
- *   if no src passed in, extracted from block
- *   lots of top-level play controls
- *   object creates its own audio element if none provided
+ *   Improved speed of getCurrentWord and class highlighting
+ *   Simplified timers to use just one, improving reliability at higher speeds
+ *   Added a bunch of consumer events (on_start, on_complete, on_pause, on_resume, on_newline)
+ *   Made tags and classes somewhat configurable, with terse deaults
+ *   Removed the tab index stuff (I probably shouldn't have)
+ *   Changed seconds to ms
+ *   Changed data-attributes to use a single 'data-map' attribute like data-map="7464,844"
+ *   Wrapped code in instantiatable object with configuration in constructor
+ *   If no audio src, src is extracted from block's data-audiosrc
+ *   Added top-level play controls such as playBlock, pause, resume, playRange, playWord
+ *   Audio element is created automatically and need not be provided in HTML
  * 
  * @license MIT/GPL
  * https://github.com/westonruter/html5-audio-read-along
