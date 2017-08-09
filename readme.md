@@ -64,11 +64,13 @@ This is a UI object, so the tests were just used for development.
 
 // Configuration options. These are the defaults
 let args = { 
-  playbackRate: 1,
-  prevOffsetTop: 0, 
-  forceLineScroll: true,  
-  keep_highlight_on_pause: true,
-  highlight_trail: true
+  playbackRate: 1, // speed, between .05 and 2 
+  forceLineScroll: false,  // automatically scroll between lines
+  keep_highlight_on_pause: false, // show current word when pausing
+  highlight_trail: false, // highlights two words at a time instead of just one -- less jumpy
+  auto_continue: false, // tries to continue on to the next playable block 
+  click_listener: false, // plays from clicked word
+  spacebar_toggle: false // spacebar toggles play
 }
 // Optional events you can hook into
 let events = {

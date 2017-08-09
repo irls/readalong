@@ -27,9 +27,12 @@ class ReadAlong {
     let default_args = { 
       playbackRate: 1,
       prevOffsetTop: 0, 
-      forceLineScroll: true,  
-      keep_highlight_on_pause: true,
-      highlight_trail: true
+      forceLineScroll: false,  
+      keep_highlight_on_pause: false,
+      highlight_trail: false,
+      auto_continue: false,
+      click_listener: false,
+      spacebar_toggle: false
     }
     args = Object.assign(default_args, args)
     for (name in args) this[name] = args[name] 
@@ -53,7 +56,7 @@ class ReadAlong {
       gap_attr: 'gap',
       gap_before_attr: 'gapbefore',
       reading_class: 'audio-highlight',
-      trail_class: 'audio-trail' 
+      trail_class: 'audio-trail'
     }
     config = Object.assign(default_config, config)
     this.config={}
@@ -71,32 +74,69 @@ class ReadAlong {
     this.last_word = null 
     this.block_duration = 0 
     this.block_duration_adjusted = 0 
+    this.addGlobalEventListeners()
   }
 
-  playBlock  (blockid, speed=null) { 
+  loadBlock (blockid) {
+
+  }
+
+  playBlock (blockid, fromWord=null, speed=null, scrollFromWord=null) { 
+    if (!this.audio_element.paused) {
+      this.audio_element.pause() // how to wait until this is done?
+      if (!this.audio_element.paused) console.error('Warning, could not stop audio element!')
+    }
+    console.log('playBlock', blockid, speed, scrollFromWord)
     if (speed) this.changePlayRate(speed)
+
+
     // todo, if already playing, stop, clear and reset   
     this.blockid = blockid  
     this.block_element = document.getElementById(blockid) 
     // assign audio to src
     if (!this.audio_element.paused) this.audio_element.pause
     this.audio_src = this.block_element.dataset[this.config.block_attr]
-    console.log('audio: ', this.audio_src, this.config.block_attr,  this.block_element.dataset)
+    // console.log('audio: ', this.audio_src, this.config.block_attr,  this.block_element.dataset)
     this.audio_element.src = this.audio_src 
     this.audio_element.playbackRate = this.playbackRate
-    // clear out any previous activity
+    // clear out any previous activity, probably not necessary
     this.word = null
     this.words = []
     // prep this block
     this.generateWordList()
-    this.addEventListeners()
-    this.selectCurrentWord()
+    this.addBlockEventListeners()
+
+
     // I think we're all ready to go
-    this.audio_element.play() 
+    // set playhead to first word
+    if (this.words.length>0) {
+      let word = this.words[0] 
+      if (fromWord) word = this.words[fromWord.dataset.index]
+      this.audio_element.currentTime = (word.begin / 1000) + 0.01 
+      if (this.forceLineScroll && scrollFromWord) this.lineScrollByWords(scrollFromWord, word, 200) 
+      this.selectCurrentWord()
+      this.audio_element.play() 
+    }
   }
  
+  // used from user click. Element must be a word
+  playFromWordElement(target) {
+    if (target.localName==='w' && target.getAttribute('data-map')) {
+      let block = target.parentElement
+      let blockid = block.getAttribute('id')
+      if (blockid === this.blockid) {
+        //console.log('playing from word in current paragraph', target)
+        this.playFromWord(this.words[target.dataset.index])
+      } else {
+        //console.log('playing from word in non-current paragraph', blockid) 
+        this.removeWordSelectionClass()
+        this.playBlock(blockid, target)
+      } 
+    }
+  }
 
   playFromWord (word) { 
+    console.log('Play from word', word)
     // Note: times apparently cannot be exactly set and sometimes selected too early 
     this.audio_element.currentTime = (word.begin / 1000) + 0.01
     this.removeWordSelectionClass()
@@ -118,6 +158,7 @@ class ReadAlong {
 
   resume () { 
     if (!this.audio_element.paused) return  
+    this.removeWordSelectionClass()
     let word = this.getCurrentWord()
     this.audio_element.play()
     if (this.events.on_resume) this.events.on_resume(word)
@@ -144,18 +185,18 @@ class ReadAlong {
   generateWordList  () { 
     let word_els = this.block_element.querySelectorAll(`${this.config.tag}[data-${this.config.map_attr}]`);
     this.words = Array.prototype.map.call(word_els, function (word_el, index) {
-    let [begin, dur, end=parseInt(begin)+parseInt(dur)] = word_el.dataset.map.split(',')
-    word_el.dataset.index = index
-    let word = {
-      begin: parseInt(begin),
-      end: end,
-      dur: parseInt(dur),
-      element: word_el,
-      index: index,
-      text: word_el.innerText,
-      html: word_el.innerHTML
-    } 
-    return word;
+      let [begin, dur, end=parseInt(begin)+parseInt(dur)] = word_el.dataset.map.split(',')
+      word_el.dataset.index = index
+      let word = {
+        begin: parseInt(begin),
+        end: end,
+        dur: parseInt(dur),
+        element: word_el,
+        index: index,
+        text: word_el.innerText,
+        html: word_el.innerHTML
+      } 
+      return word;
     })  
     let lastWord = this.words[this.words.length-1] 
     this.block_duration = lastWord.begin+lastWord.end-this.words[0].begin
@@ -199,28 +240,35 @@ class ReadAlong {
      * of the word.
      */
     if (is_playing) {
-      this.setWordSelectionClass(current_word, true) 
       // Automatically trigger selectCurrentWord when the next word begins
-      if (current_word.index < this.words.length-1) {
+      if (current_word.index < this.words.length) {
+        this.setWordSelectionClass(current_word) 
+        let isLastWord = (current_word.index === this.words.length-1)
         let current_time = this.audio_element.currentTime * 1000
         let playbackRate = 1.0/this.audio_element.playbackRate
-        let next_word = this.words[current_word.index + 1]
-        let ms_until_next = Math.max(Math.round((next_word.begin-current_time) * playbackRate),0) 
-        if (this._next_select_timeout != null) { 
-          // check if our timing is off. This should fire only at speed changes
-          // console.log('Prematurely cleared nextword timer', ms_until_next)
-          clearTimeout(this._next_select_timeout) 
+        // timeout to beginning of next word -- or end of this word (if last word)
+        let ms_until_next = 0
+        if (isLastWord) {
+          //console.log('last word!', '"'+current_word.text+'"')
+          // on the last word, we have to use the word end minus 200ms because the HTML5 player takes 200ms to stop
+          ms_until_next = Math.max(Math.round((current_word.end-current_time) * playbackRate),0) - 200
+        } else {
+          let next_word = this.words[current_word.index + 1]
+          ms_until_next = Math.max(Math.round((next_word.begin-current_time) * playbackRate),0) 
         } 
-        this._next_select_timeout = setTimeout( () => {
-          this.selectCurrentWord()
-          this._next_select_timeout = null
+       // console.log('Setting timer for word: "'+current_word.text+'"', ms_until_next, current_word.dur,
+       // Math.round((current_word.end-current_time) * playbackRate))
+        this._next_select_timeout = setTimeout( () => { 
+          clearTimeout(this._next_select_timeout) // not sure why this is needed
+          if (isLastWord) this.onEndBlock() // just finished last word in block
+            else this.selectCurrentWord()
         }, ms_until_next)
-      }  
+      } // else (this.onEndBlock())
     } else if (!this.keep_highlight_on_pause) this.removeWordSelectionClass(current_word)  
 
   }
 
-  removeWordSelectionClass (word) { 
+  removeWordSelectionClass (word=null) { 
     // console.log('removeWordSelectionClass')
     let reading_class = this.config.reading_class
     let trail_class = this.config.trail_class 
@@ -234,9 +282,17 @@ class ReadAlong {
     else {  
       var spoken_word_els = this.block_element.querySelectorAll(`.${reading_class}, .${trail_class}`) 
       Array.prototype.forEach.call(spoken_word_els, function (spoken_word_el) {
-      spoken_word_el.classList.remove(reading_class, trail_class) 
+        spoken_word_el.classList.remove(reading_class, trail_class) 
       }) 
     }
+  }
+
+  removeSelectionTrail() {
+    //console.log("forced removeal of trails")
+    let els = this.block_element.querySelectorAll(`.${this.config.trail_class}`) 
+    Array.prototype.forEach.call(els, (el) => {
+      el.classList.remove(this.config.trail_class) 
+    }) 
   }
 
   setWordSelectionClass (word) {
@@ -248,7 +304,7 @@ class ReadAlong {
     let percentComplete = Math.round((word.index+1)/this.words.length * 100)
     let onNewLine = this.events.on_newline
     if (isNewline && onNewLine) onNewLine(this.prevOffsetTop, word.element.offsetTop, percentComplete) 
-    if (isNewline && this.forceLineScroll) this.lineScroll(word.element.offsetTop - this.prevOffsetTop)
+    if (isNewline && this.forceLineScroll) this.lineScrollByWords(word, this.words[word.index-1]) 
     this.prevOffsetTop = word.element.offsetTop;
     // clear previous word highlight
     if (word.index>0) this.words[word.index-1].element.classList.remove(reading_class) 
@@ -262,16 +318,43 @@ class ReadAlong {
     }  else if (this.highlight_trail && word.index>0) this.words[word.index-1].element.classList.add(trail_class) 
   }
 
-  lineScroll(pixles) {
-    // console.log('LineScroll', pixles)
-    // TODO: implement browser scroll by # pixels
-    window.scrollBy(0, pixles)
+  onEndBlock() { 
+    if (!this.audio_element.paused) this.audio_element.pause() 
+    // scroll to next block with audio
+    if (this.auto_continue) setTimeout(() => {
+      this.removeWordSelectionClass()
+      let nextID = this.nextAudioBlockID()
+      if (nextID != null) this.playBlock(nextID, null, null, this.words[this.words.length-1])
+    }, 1000) 
+    // fire off completed event for cuurent block
+    if (this.events.on_complete) this.events.on_complete(this.blockid)       
   }
 
-  addEventListeners  () {
-    var that = this
+  lineScroll(pixles, duration = 100) {  
+    // window.scrollBy(0, pixles) 
+    scrollBy(pixles, duration)
+  }
 
-    /**
+  lineScrollByWords(wordFrom, wordTo, duration = 100) {
+    let from = wordFrom.element.offsetTop
+    let to = wordTo.element.offsetTop
+    this.lineScroll(from-to, duration) 
+    this.removeSelectionTrail()
+  }
+
+  nextAudioBlockID() {
+    let i, blocks = document.querySelectorAll(`[id][data-${this.config.block_attr}]`)
+    for (i=0; i<blocks.length-1; i++) { 
+      if (blocks[i].getAttribute('id') === this.blockid && (i<blocks.length-1)) return blocks[i+1].getAttribute('id')
+    }
+    console.log('No next block found', this.blockid, blocks)
+    return null 
+  }
+
+  addBlockEventListeners () {
+    //console.log('Adding block event listeners: ', this.blockid)
+    var that = this
+     /**
      * Select next word (at that.audio_element.currentTime) when playing begins
      */
     that.audio_element.addEventListener('play', function (e) {
@@ -283,59 +366,58 @@ class ReadAlong {
      */
     that.audio_element.addEventListener('pause', function (e) { 
       that.selectCurrentWord() // We always want a word to be selected  
-      let word = that.getCurrentWord() 
-      let onPause = that.events.on_pause
-      if ((word.index<that.words.length-1) && onPause) onPause(word) 
+      let word = that.getCurrentWord()  
+      that.removeSelectionTrail()
+      if ((word.index<that.words.length-1) && that.events.on_pause) that.events.on_pause(word) 
     }, false);
 
     /**
      * Event just for completion of block
      */
-    that.audio_element.addEventListener('ended', function (e) {  
-      if (that.events.on_complete) that.events.on_complete(that.blockid) 
-    }, false);
+    // that.audio_element.addEventListener('ended', function (e) {  
+    //   //that.onEndBlock();
+    // }, false);
 
     /**
      * Seek by selecting a word (event delegation)
      */
-    function on_select_word_el(e) {  
-      if (!e.target.dataset.map) return 
-      e.preventDefault()  
-      that.playFromWord(that.words[e.target.dataset.index]) 
-    }
+    // function on_select_word_el(e) {  
+    //   if (!e.target.dataset.map) return 
+    //   e.preventDefault()  
+    //   that.playFromWord(that.words[e.target.dataset.index]) 
+    // }
 
     // word click
     // that.block_element.addEventListener('click', on_select_word_el, false)
     // enter
-    that.block_element.addEventListener('keypress', function (e) { 
-      if ( (e.charCode || e.keyCode) === 13) on_select_word_el.call(this, e) 
-    }, false)
+    // that.block_element.addEventListener('keypress', function (e) { 
+    //   if ( (e.charCode || e.keyCode) === 13) on_select_word_el.call(this, e) 
+    // }, false)
 
-    /**
-     * Spacebar toggles playback
-     */
-    document.addEventListener('keypress', function (e) {
-      // space bar
-      if ( (e.charCode || e.keyCode) === 32) {
-      e.preventDefault()
-      if (that.audio_element.paused) that.resume()
-        else that.audio_element.pause() 
-      }
-    }, false)
 
     /**
      * First click handler sets currentTime to the word, and second click
      * here then causes it to play.
      * @todo Should it stop playing once the duration is over?
      */
-    that.block_element.addEventListener('dblclick', function (e) {
-      e.preventDefault()
-      //that.audio_element.play()
-      //that.audio_element.pause()
-      //let word = that.getCurrentWord()
-      let word = that.words[e.target.dataset.index]
-      that.playWord(word)
-    }, false);
+    // that.block_element.addEventListener('dblclick', function (e) {
+    //   e.preventDefault()
+    //   //that.audio_element.play()
+    //   //that.audio_element.pause()
+    //   //let word = that.getCurrentWord()
+    //   let word = that.words[e.target.dataset.index]
+    //   that.playWord(word)
+    // }, false);
+
+    // that.block_element.addEventListener('dblclick', function (e) {
+    //   e.preventDefault()
+    //   //that.audio_element.play()
+    //   //that.audio_element.pause()
+    //   //let word = that.getCurrentWord()
+    //   let word = that.words[e.target.dataset.index]
+    //   that.playWord(word)
+    // }, false);
+    
 
     /**
      * Select a word when seeking
@@ -374,9 +456,46 @@ class ReadAlong {
       let word = that.getCurrentWord()
       if (that.events.on_start && word.index===0) that.events.on_start(that.blockid, that.words, that.block_duration, that.playbackRate)
     }, false)
+  }
+
+  addGlobalEventListeners  () {
+    console.log('Adding global event listeners')
+    var that = this
+    /**
+     * Spacebar toggles playback
+     */
+    if (that.spacebar_toggle) document.addEventListener('keypress', function (e) { 
+      if ( (e.charCode || e.keyCode) === 32) {
+        e.preventDefault()
+        //console.log('space bar pressed')
+        if (that.audio_element.paused) that.resume()
+          else that.audio_element.pause() 
+      }
+    }, false)
+
+    if (that.click_listener) document.addEventListener('click', function (e) {
+      e.preventDefault() 
+      that.playFromWordElement(e.target)
+    }, false)
 
   }
 }
 
+function scrollBy(distance, duration) {
+    var initialY = document.body.scrollTop;
+    var y = initialY + distance;
+    var baseY = (initialY + y) * 0.5;
+    var difference = initialY - baseY;
+    var startTime = performance.now();
+    function step() {
+        var normalizedTime = (performance.now() - startTime) / duration;
+        if (normalizedTime > 1) normalizedTime = 1;
 
-module.exports = ReadAlong
+        window.scrollTo(0, baseY + difference * Math.cos(normalizedTime * Math.PI));
+        if (normalizedTime < 1) window.requestAnimationFrame(step);
+    }
+    window.requestAnimationFrame(step);
+}
+
+
+if (typeof module !== 'undefined')  module.exports = ReadAlong
