@@ -45,7 +45,7 @@ class ReadAlong {
       on_complete: null,
       on_newline: null   
     }
-    events = Object.assign(default_args, events)
+    events = Object.assign(default_events, events)
     this.events = {}
     for (name in events) this.events[name] = events[name] 
     // default configuration
@@ -78,19 +78,6 @@ class ReadAlong {
   }
 
   loadBlock (blockid) {
-
-  }
-
-  playBlock (blockid, fromWord=null, speed=null, scrollFromWord=null) { 
-    if (!this.audio_element.paused) {
-      this.audio_element.pause() // how to wait until this is done?
-      if (!this.audio_element.paused) console.error('Warning, could not stop audio element!')
-    }
-    console.log('playBlock', blockid, speed, scrollFromWord)
-    if (speed) this.changePlayRate(speed)
-
-
-    // todo, if already playing, stop, clear and reset   
     this.blockid = blockid  
     this.block_element = document.getElementById(blockid) 
     // assign audio to src
@@ -105,6 +92,19 @@ class ReadAlong {
     // prep this block
     this.generateWordList()
     this.addBlockEventListeners()
+  }
+
+  playBlock (blockid, fromWord=null, speed=null, scrollFromWord=null) { 
+    if (!this.audio_element.paused) {
+      this.audio_element.pause() // how to wait until this is done?
+      if (!this.audio_element.paused) console.error('Warning, could not stop audio element!')
+    }
+    console.log('playBlock', blockid, speed, scrollFromWord)
+    if (speed) this.changePlayRate(speed)
+
+
+    // todo, if already playing, stop, clear and reset   
+    this.loadBlock(blockid)
 
 
     // I think we're all ready to go
@@ -120,11 +120,9 @@ class ReadAlong {
   }
  
   // used from user click. Element must be a word
-  playFromWordElement(target) {
+  playFromWordElement(target, blockid) {
     if (target.localName==='w' && target.getAttribute('data-map')) {
-      let block = target.parentElement
-      let blockid = block.getAttribute('id')
-      if (blockid === this.blockid) {
+      if (blockid === this.blockid && target.getAttribute('data-index')) {
         //console.log('playing from word in current paragraph', target)
         this.playFromWord(this.words[target.dataset.index])
       } else {
@@ -149,7 +147,9 @@ class ReadAlong {
     this.playRange(word.begin, word.end)
   }
 
-  playRange(start, stop) { 
+  playRange(blockid, start, stop) { 
+    this.loadBlock(blockid)
+    
     this.audio_element.pause()
     this.audio_element.currentTime = start / 1000  
     setTimeout(() => { this.audio_element.pause() }, Math.round((stop-start) * 1.0/this.audio_element.playbackRate))
@@ -259,6 +259,7 @@ class ReadAlong {
        // console.log('Setting timer for word: "'+current_word.text+'"', ms_until_next, current_word.dur,
        // Math.round((current_word.end-current_time) * playbackRate))
         this._next_select_timeout = setTimeout( () => { 
+          this.removeWordSelectionClass(current_word)
           clearTimeout(this._next_select_timeout) // not sure why this is needed
           if (isLastWord) this.onEndBlock() // just finished last word in block
             else this.selectCurrentWord()
@@ -279,7 +280,7 @@ class ReadAlong {
       if (word.index>1) this.words[word.index-2].element.classList.remove(reading_class, trail_class)  
     }  
     // this is slower since it requires querying, so we avoid it when possible 
-    else {  
+    else if (this.block_element) {  
       var spoken_word_els = this.block_element.querySelectorAll(`.${reading_class}, .${trail_class}`) 
       Array.prototype.forEach.call(spoken_word_els, function (spoken_word_el) {
         spoken_word_el.classList.remove(reading_class, trail_class) 
