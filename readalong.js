@@ -122,7 +122,7 @@ class ReadAlong {
   // used from user click. Element must be a word
   playFromWordElement(target, blockid) {
     if (target.localName==='w' && target.getAttribute('data-map')) {
-      if (blockid === this.blockid) {
+      if (blockid === this.blockid && target.getAttribute('data-index')) {
         //console.log('playing from word in current paragraph', target)
         this.playFromWord(this.words[target.dataset.index])
       } else {
@@ -259,6 +259,7 @@ class ReadAlong {
        // console.log('Setting timer for word: "'+current_word.text+'"', ms_until_next, current_word.dur,
        // Math.round((current_word.end-current_time) * playbackRate))
         this._next_select_timeout = setTimeout( () => { 
+          this.removeWordSelectionClass(current_word)
           clearTimeout(this._next_select_timeout) // not sure why this is needed
           if (isLastWord) this.onEndBlock() // just finished last word in block
             else this.selectCurrentWord()
