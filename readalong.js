@@ -18,7 +18,6 @@
  * @license MIT/GPL
  * https://github.com/westonruter/html5-audio-read-along
  */
-
 class ReadAlong {
     
   constructor(args, events, config) {
@@ -74,6 +73,7 @@ class ReadAlong {
     this.last_word = null 
     this.block_duration = 0 
     this.block_duration_adjusted = 0 
+    this.load_delay = 0;
     this.addGlobalEventListeners()
   }
 
@@ -114,8 +114,7 @@ class ReadAlong {
       if (fromWord) word = this.words[fromWord.dataset.index]
       this.audio_element.currentTime = (word.begin / 1000) + 0.01 
       if (this.forceLineScroll && scrollFromWord) this.lineScrollByWords(scrollFromWord, word, 200) 
-      this.selectCurrentWord()
-      this.audio_element.play() 
+      this.audioElementPlay() 
     }
   }
  
@@ -153,7 +152,19 @@ class ReadAlong {
     this.audio_element.pause()
     this.audio_element.currentTime = start / 1000  
     setTimeout(() => { this.audio_element.pause() }, Math.round((stop-start) * 1.0/this.audio_element.playbackRate))
-    this.audio_element.play()  
+    this.audioElementPlay(false)  
+  }
+  
+  audioElementPlay(setSelection = true) {
+    let startLoad = new Date();
+    this.load_delay = 0;
+    let playPromise = this.audio_element.play() 
+    playPromise.then(() => {
+      this.load_delay = (new Date()).getTime() - startLoad.getTime() + 500;
+      if (setSelection) {
+        this.selectCurrentWord()
+      }
+    });
   }
 
   resume () { 
@@ -251,7 +262,7 @@ class ReadAlong {
         if (isLastWord) {
           //console.log('last word!', '"'+current_word.text+'"')
           // on the last word, we have to use the word end minus 200ms because the HTML5 player takes 200ms to stop
-          ms_until_next = Math.max(Math.round((current_word.end-current_time) * playbackRate),0) - 200
+          ms_until_next = Math.max(Math.round((current_word.end-current_time) * playbackRate),0) - 200 + this.load_delay;
         } else {
           let next_word = this.words[current_word.index + 1]
           ms_until_next = Math.max(Math.round((next_word.begin-current_time) * playbackRate),0) 
@@ -320,7 +331,11 @@ class ReadAlong {
   }
 
   onEndBlock() { 
-    if (!this.audio_element.paused) this.audio_element.pause() 
+    if (!this.audio_element.paused) {
+      setTimeout(() => {
+        this.audio_element.pause(); 
+      }, this.load_delay);
+    }
     // scroll to next block with audio
     if (this.auto_continue) setTimeout(() => {
       this.removeWordSelectionClass()
