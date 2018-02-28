@@ -1,6 +1,6 @@
 {
   "name": "readalong",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Audio & text player object, based on Weston Ruter's HTML5-Audio-Read-Along",
   "main": "readalong.js",
   "directories": {
