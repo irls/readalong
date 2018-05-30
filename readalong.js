@@ -75,9 +75,11 @@ class ReadAlong {
     this.block_duration_adjusted = 0 
     this.load_delay = 0;
     this.addGlobalEventListeners()
+    this.stop_time = null;
   }
 
   loadBlock (blockid) {
+    let reload = this.blockid != blockid;
     this.blockid = blockid  
     this.block_element = document.getElementById(blockid) 
     // assign audio to src
@@ -91,7 +93,10 @@ class ReadAlong {
     this.words = []
     // prep this block
     this.generateWordList()
-    this.addBlockEventListeners()
+    if (reload) {
+      this.addBlockEventListeners()
+    }
+    this.stop_time = null;
   }
 
   playBlock (blockid, fromWord=null, speed=null, scrollFromWord=null) { 
@@ -151,7 +156,8 @@ class ReadAlong {
     
     this.audio_element.pause()
     this.audio_element.currentTime = start / 1000  
-    setTimeout(() => { this.audio_element.pause() }, Math.round((stop-start) * 1.0/this.audio_element.playbackRate))
+    this.generateWordList(start, stop);
+    this.stop_time = stop / 1000;
     this.audioElementPlay(false)  
   }
   
@@ -193,22 +199,34 @@ class ReadAlong {
    * Build an index of all of the words this can be read along with their begin,
    * and end times, and the DOM element representing the word.
    */
-  generateWordList  () { 
+  generateWordList  (startPos = null, endPos = null) { 
     let word_els = this.block_element.querySelectorAll(`${this.config.tag}[data-${this.config.map_attr}]`);
-    this.words = Array.prototype.map.call(word_els, function (word_el, index) {
+    let index = 0
+    let words = Array.prototype.map.call(word_els, function (word_el) {
       let [begin, dur, end=parseInt(begin)+parseInt(dur)] = word_el.dataset.map.split(',')
-      word_el.dataset.index = index
-      let word = {
-        begin: parseInt(begin),
-        end: end,
-        dur: parseInt(dur),
-        element: word_el,
-        index: index,
-        text: word_el.innerText,
-        html: word_el.innerHTML
-      } 
-      return word;
+      if ((!startPos || begin >= startPos) && (!endPos || end <= endPos)) {
+        word_el.dataset.index = index
+        let word = {
+          begin: parseInt(begin),
+          end: end,
+          dur: parseInt(dur),
+          element: word_el,
+          index: index,
+          text: word_el.innerText,
+          html: word_el.innerHTML
+        } 
+        ++index;
+        return word;
+      } else {
+        delete word_el.dataset.index;
+      }
     })  
+    this.words = [];
+    Array.prototype.forEach.call(words, (el) => {
+      if (el) {
+        this.words.push(el)
+      }
+    })
     let lastWord = this.words[this.words.length-1] 
     this.block_duration = lastWord.begin+lastWord.end-this.words[0].begin
     this.block_duration_adjusted = Math.round(this.block_duration* 1.0/this.playbackRate)
@@ -272,8 +290,10 @@ class ReadAlong {
         this._next_select_timeout = setTimeout( () => { 
           this.removeWordSelectionClass(current_word)
           clearTimeout(this._next_select_timeout) // not sure why this is needed
-          if (isLastWord) this.onEndBlock() // just finished last word in block
-            else this.selectCurrentWord()
+          if (isLastWord) {
+            //this.pause();
+            this.onEndBlock() // just finished last word in block
+          } else this.selectCurrentWord()
         }, ms_until_next)
       } // else (this.onEndBlock())
     } else if (!this.keep_highlight_on_pause) this.removeWordSelectionClass(current_word)  
@@ -373,6 +393,12 @@ class ReadAlong {
      /**
      * Select next word (at that.audio_element.currentTime) when playing begins
      */
+    that.audio_element.addEventListener('timeupdate', () => {
+      if (this.stop_time && this.audio_element.currentTime > this.stop_time) {
+        this.audio_element.pause();
+        this.onEndBlock();
+      }
+    });
     that.audio_element.addEventListener('play', function (e) {
       that.selectCurrentWord() 
     }, false);
