@@ -205,7 +205,7 @@ class ReadAlong {
     let words = Array.prototype.map.call(word_els, function (word_el) {
       let [begin, dur, end=parseInt(begin)+parseInt(dur)] = word_el.dataset.map.split(',')
       let startEndInRange = (startPos !== null && endPos !== null && (
-              (begin >= startPos && begin <= endPos) || (end >= startPos && end <= endPos)
+              (begin >= startPos && begin <= endPos) || (end > startPos && end <= endPos)
               ));
       if (((!startPos || begin >= startPos) && (!endPos || end <= endPos)) || 
               startEndInRange) {
