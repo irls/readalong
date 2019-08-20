@@ -203,13 +203,14 @@ class ReadAlong {
     let word_els = this.block_element.querySelectorAll(`${this.config.tag}[data-${this.config.map_attr}]`);
     let index = 0
     let words = Array.prototype.map.call(word_els, function (word_el) {
+      delete word_el.dataset.index;
       let [begin, dur, end=parseInt(begin)+parseInt(dur)] = word_el.dataset.map.split(',')
       let startEndInRange = (startPos !== null && endPos !== null && (
               (begin >= startPos && begin <= endPos) || (end > startPos && end <= endPos)
               ));
-      if (((!startPos || begin >= startPos) && (!endPos || end <= endPos)) || 
-              startEndInRange) {
-        word_el.dataset.index = index
+      if ((((!startPos || begin >= startPos) && (!endPos || end <= endPos)) || 
+              startEndInRange) && typeof begin !== 'undefined' && typeof dur !== 'undefined') {
+        word_el.dataset.index = index;
         let word = {
           begin: parseInt(begin),
           end: end,
