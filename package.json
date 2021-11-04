@@ -13,7 +13,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chadananda/readalong.git"
+    "url": "git+https://github.com/irls/readalong.git"
   },
   "keywords": [
     "audio",
@@ -25,9 +25,9 @@
     "ocean"
   ],
   "bugs": {
-    "url": "https://github.com/chadananda/readalong/issues"
+    "url": "https://github.com/irls/readalong/issues"
   },
-  "homepage": "https://github.com/chadananda/readalong#readme",
+  "homepage": "https://github.com/irls/readalong#readme",
   "dependencies": {
     "js-binary": "^1.1.0"
   },
