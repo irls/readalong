@@ -78,7 +78,7 @@ class ReadAlong {
     this.stop_time = null;
   }
 
-  loadBlock (blockid) {
+  loadBlock (blockid, startFrom = null) {
     let reload = this.blockid != blockid;
     this.blockid = blockid  
     this.block_element = document.getElementById(blockid) 
@@ -92,7 +92,7 @@ class ReadAlong {
     this.word = null
     this.words = []
     // prep this block
-    this.generateWordList()
+    this.generateWordList(startFrom)
     if (reload) {
       this.addBlockEventListeners()
     }
@@ -104,19 +104,29 @@ class ReadAlong {
       this.audio_element.pause() // how to wait until this is done?
       if (!this.audio_element.paused) console.error('Warning, could not stop audio element!')
     }
-    console.log('playBlock', blockid, speed, scrollFromWord)
+    //console.log('playBlock', blockid, speed, scrollFromWord)
     if (speed) this.changePlayRate(speed)
 
 
     // todo, if already playing, stop, clear and reset   
-    this.loadBlock(blockid)
+    let startTime = null;
+    if (fromWord && fromWord.dataset && fromWord.dataset.map) {
+      let map = fromWord.dataset.map.split(',');
+      if (map && map[0]) {
+        startTime = parseInt(map[0]);
+      }
+    }
+    this.loadBlock(blockid, startTime);
 
 
     // I think we're all ready to go
     // set playhead to first word
     if (this.words.length>0) {
       let word = this.words[0] 
-      if (fromWord) word = this.words[fromWord.dataset.index]
+      //if (fromWord) {
+        //this.generateWordList(parseInt(fromWord.dataset.index));
+        //word = this.words[0];
+      //}
       this.audio_element.currentTime = (word.begin / 1000) + 0.01 
       if (this.forceLineScroll && scrollFromWord) this.lineScrollByWords(scrollFromWord, word, 200) 
       this.audioElementPlay() 
@@ -138,7 +148,7 @@ class ReadAlong {
   }
 
   playFromWord (word) { 
-    console.log('Play from word', word)
+    //console.log('Play from word', word)
     // Note: times apparently cannot be exactly set and sometimes selected too early 
     this.audio_element.currentTime = (word.begin / 1000) + 0.01
     this.removeWordSelectionClass()
@@ -204,7 +214,8 @@ class ReadAlong {
     let index = 0
     let words = Array.prototype.map.call(word_els, function (word_el) {
       delete word_el.dataset.index;
-      let [begin, dur, end=parseInt(begin)+parseInt(dur)] = word_el.dataset.map.split(',')
+      let [begin, dur, end=parseInt(begin)+parseInt(dur)] = word_el.dataset.map.split(',');
+      begin = parseInt(begin);
       let startEndInRange = (startPos !== null && endPos !== null && (
               (begin >= startPos && begin <= endPos) || (end > startPos && end <= endPos)
               ));
@@ -292,13 +303,17 @@ class ReadAlong {
         } 
        // console.log('Setting timer for word: "'+current_word.text+'"', ms_until_next, current_word.dur,
        // Math.round((current_word.end-current_time) * playbackRate))
-        this._next_select_timeout = setTimeout( () => { 
-          this.removeWordSelectionClass(current_word)
-          clearTimeout(this._next_select_timeout) // not sure why this is needed
-          if (isLastWord) {
-            //this.pause();
-            this.onEndBlock() // just finished last word in block
-          } else this.selectCurrentWord()
+        this._next_select_timeout = setTimeout( () => {
+          clearTimeout(this._next_select_timeout) // not sure why this is needed 
+          if (!this.audio_element.paused) {
+            this.removeWordSelectionClass(current_word)
+            if (isLastWord) {
+              //this.pause();
+              this.onEndBlock() // just finished last word in block
+            } else {
+              this.selectCurrentWord()
+            }
+          }
         }, ms_until_next)
       } // else (this.onEndBlock())
     } else if (!this.keep_highlight_on_pause) this.removeWordSelectionClass(current_word)  
@@ -506,7 +521,7 @@ class ReadAlong {
   }
 
   addGlobalEventListeners  () {
-    console.log('Adding global event listeners')
+    //console.log('Adding global event listeners')
     var that = this
     /**
      * Spacebar toggles playback
