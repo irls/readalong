@@ -262,9 +262,16 @@ class ReadAlong {
     while (min <= max) {
       index = (min + max) / 2 | 0
       word = this.words[index]
-      if (play_time > word.end) min = index + 1 
-        else if (play_time < word.begin) max = index - 1 
-          else return this.last_word = word
+      if (play_time > word.end) { 
+        min = index + 1 ;
+      } else if (play_time < word.begin) {
+        max = index - 1 ;
+      } else {
+        if (word && word.element && !word.element.isConnected) {
+          this.generateWordList();
+        }
+        return this.last_word = word;
+      }
     }
     return this.last_word = word ; //this.words[index] 
   }
@@ -313,6 +320,8 @@ class ReadAlong {
             } else {
               this.selectCurrentWord()
             }
+          } else if (isLastWord) {
+            this.onEndBlock();
           }
         }, ms_until_next)
       } // else (this.onEndBlock())
@@ -540,6 +549,18 @@ class ReadAlong {
       that.playFromWordElement(e.target)
     }, false)
 
+  }
+  
+  regenerateAndHighlight() {
+    if (this.audio_element.paused) {
+      this.last_word = null;
+      this.generateWordList();
+      let current_word = this.getCurrentWord();
+      this.setWordSelectionClass(current_word);
+    } else {
+      this.generateWordList();
+      this.selectCurrentWord();
+    }
   }
 }
 
