@@ -562,6 +562,30 @@ class ReadAlong {
       this.selectCurrentWord();
     }
   }
+  
+  setAudiosrc(audiosrc) {
+    //return new Promise((resolve, reject) => {
+      if (this.audio_element) {
+        let currentTime = this.audio_element.currentTime || 0;
+        /*this.audio_element.addEventListener('loadeddata', (a, b, c) => {
+          console.log('onloadeddata', a, b, c, this.audio_element.networkState);
+          //this.audio_element.removeEventListener('loadeddata');
+          //this.audio_element.currentTime = currentTime;
+          console.log(currentTime);
+          return resolve();
+        });*/
+        this.audio_src = audiosrc;
+        this.audio_element.src = this.audio_src;
+        this.audio_element.currentTime = currentTime;
+      } else {
+        //return resolve();
+      }
+    //});
+  }
+  
+  setCurrentTime(currentTime) {
+    this.audio_element.currentTime = currentTime;
+  }
 }
 
 function scrollBy(distance, duration) {
