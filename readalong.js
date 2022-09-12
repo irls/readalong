@@ -193,6 +193,11 @@ class ReadAlong {
 
   pause () { 
     this.audio_element.pause()
+    clearTimeout(this._next_select_timeout);
+    let word = this.getCurrentWord();
+    if (word && (word.index === this.words.length-1) && this.events.on_pause) {
+      this.events.on_pause(word);
+    }
   }
 
   changePlayRate (playbackRate=1) {
