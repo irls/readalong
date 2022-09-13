@@ -187,6 +187,9 @@ class ReadAlong {
     if (!this.audio_element.paused) return  
     this.removeWordSelectionClass()
     let word = this.getCurrentWord()
+    if (Math.abs(this.audio_element.currentTime - this.audio_element.duration) < 0.2) {
+      return this.onEndBlock();
+    }
     this.audio_element.play()
     if (this.events.on_resume) this.events.on_resume(word)
   }
